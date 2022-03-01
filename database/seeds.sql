@@ -20,8 +20,8 @@ VALUES (1,"Michael","Ariti",4),
        (3,"Celeste","Patricio",2),
        (5,"Monty","Moww",5),
        (6,"Jodie","Sosa",6),
-       (7,"Sam","Dwight",7),
-       (8,"Empty", "Person",1);
+       (7,"Sam","Dwight",7);
+       
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Isobel","Fawcett", 1, 2),
@@ -48,8 +48,8 @@ VALUES ("Isobel","Fawcett", 1, 2),
        ("Kiah","Hunter", 7, 7),
        ("Josh","Mazz", 7, 7),
        ("Sam","Dwight", 7, 1),
-       ("Michael","Ariti", 4, 8),
-       ("Empty", "Person", 1, NULL);
+       ("Michael","Ariti", 4, NULL);
+       
 
 
 
