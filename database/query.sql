@@ -23,7 +23,7 @@ INSERT INTO department (name)
 
 /*Add to Role*/
 INSERT INTO role (title, salary, department_id)
-  VALUES (?, ?, ?);
+  VALUES ("builder", 45000, 3);
 
 /*Add to Employee*/
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
