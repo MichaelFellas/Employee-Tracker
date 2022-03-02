@@ -29,7 +29,9 @@ var questionsAction = [
                   "Update Employee Managers",
                   "View Employees by Manager",
                   "View Employees by Department",
-                  "Delete Departments, Roles or Employees",
+                  "Delete Department",
+                  "Delete Role",
+                  "Delete Employee",
                   "View Total Utilized Budget of Deparment",
                   "Finished!",
                   new inquirer.Separator()               
@@ -39,12 +41,14 @@ var questionsAction = [
 
 //Asks what the user would like to do
 function newAction (){
+
     inquirer.prompt(questionsAction)
     .then(switchFunction)
 }
 
 //Runs function depends on team member role response
 function switchFunction (questionsAction) {
+
     switch(questionsAction.action){
         
         case "View all Departments":
@@ -64,23 +68,19 @@ function switchFunction (questionsAction) {
             break;
 
         case "Add a Role":
-            addRole ();           
+            addRole ();//Function Adds a Role           
             break;
 
         case "Add an Employee":
-            addEmployee (); 
+            addEmployee ();//Function Adds an employee 
             break;
             
         case "Update an Employee Role":
-            inquirer.prompt(questionsEmployeeRole)
-            .then(createEngineer)
-            .then(newTeamMember)
+            updateRole();//Function Update Employees Role
             break;
 
         case "Update Employee Managers":
-            inquirer.prompt(questionsEmployeeManager)
-            .then(createIntern)
-            .then(newTeamMember)
+            updateMan();//Function updates the employees manager
             break;
 
         case "View Employees by Manager":
@@ -91,10 +91,16 @@ function switchFunction (questionsAction) {
             viewEmpDept ();// Function view employees by department
             break;
 
-        case "Delete Departments, Roles or Employees":
-            inquirer.prompt(questionsDelete)
-            .then(createIntern)
-            .then(newTeamMember)
+        case "Delete Department":
+            deleteDept ();// Function delete department
+            break;
+
+        case "Delete Role":
+            deleteRole ();// Function delete role
+                break;
+
+        case "Delete Employee":
+            deleteEmployee ();// Function delete employee
             break;
 
         case "View Total Utilized Budget of Deparment":
@@ -102,21 +108,19 @@ function switchFunction (questionsAction) {
             break;
 
         case "Finished!":
-           
+            process.exit();
             break;
 }
 }
 
+//Runs on init
 newAction ();
-//Write SQL QUERIES -- DONE
-//DISPLAY QUERY RESULTS IN INQUIRER
-//CREATE FUNCTIONS THAT UTILISE SQL QUIERIES -- HERE
-
 
 ///CASE 1 START
 //Shows Departments and department id's
 function viewDep () {
-db.query(`SELECT * FROM department;`, (err, result) => {
+
+db.query(`SELECT department.name AS Department_Name, department.id AS Department_ID FROM department;`, (err, result) => {
     if (err) {
       console.log(err);
     }
@@ -130,8 +134,9 @@ db.query(`SELECT * FROM department;`, (err, result) => {
 ///CASE 2 START
 //shows roles and role info
 function viewRole () {
+
     db.query(
-        `SELECT role.title AS title, role.id AS role_id, role.salary AS salary, department.name AS department
+        `SELECT role.title AS Role_Title, role.id AS Role_ID, role.salary AS Salary, department.name AS Department_Name
          FROM role
          INNER JOIN department
          ON role.department_id = department.id;`, 
@@ -149,7 +154,9 @@ function viewRole () {
 ///CASE 3 START
 //Shows employess and employee info
 function viewEmployee () {
-        db.query(`SELECT employee.first_name AS first_name, employee.last_name AS last_name, employee.id AS employee_id, role.title AS title, role.salary AS salary, department.name AS department, manager.first_name AS manager
+
+        db.query(
+                  `SELECT employee.first_name AS First_Name, employee.last_name AS Last_Name, employee.id AS Employee_ID, role.title AS Role_Title, role.salary AS Salary, department.name AS Department, manager.first_name AS Manager_First_Name,  manager.last_name AS Manager_Last_Name
                   FROM employee
                   RIGHT JOIN manager
                   ON employee.manager_id = manager.id
@@ -173,7 +180,7 @@ function viewEmployee () {
 function addDept () {
 
     db.query(
-        `SELECT department.id AS department_id, department.name AS department
+        `SELECT department.name AS Department_Name, department.id AS Department_ID
          FROM role
          INNER JOIN department
          ON role.department_id = department.id;`, 
@@ -185,29 +192,25 @@ function addDept () {
         console.log(table);
         inquirer.prompt(questionAddDept)
         .then(addDepartment)  
-      })     
-
-      
-      
+      })      
 };
 
 function addDepartment (questionAddDept) {
 
     let name = questionAddDept.name;
     addDeptActual (name);
-
 }
 
 function addDeptActual (name) {
+
     db.query(`INSERT INTO department (name)
               VALUES (?);`,
               name, (err, result) => {
         if (err) {
           console.log(err);
         }
-        console.log(`${deptName} Added to Departments Succesfully!`);
-        newAction();             
-
+        console.log(`${name} Added to Departments Succesfully!`);
+        newAction();            
       })  
 };
 
@@ -219,10 +222,8 @@ var questionAddDept = [
         validate: async (input) => {
             if ( (Number(input)) || input === '') {
                 return 'You need to provide a name';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
 ]
@@ -232,7 +233,7 @@ var questionAddDept = [
 //Adds new Role
 function addRole () {
 
-    db.query(`SELECT department.id AS department_id, department.name AS department, role.title AS title, role.id AS role_id
+    db.query(`SELECT role.title AS Role_Title, department.name AS Department, department.id AS Department_ID
               FROM role
               INNER JOIN department
               ON role.department_id = department.id;`, 
@@ -253,22 +254,19 @@ function addRoleDefine (questionAddRole) {
     let salary = questionAddRole.salary;
     let department_id = questionAddRole.department_id;
     addRoleActual (title, salary, department_id);
-
 }
 
 function addRoleActual (title, salary, department_id) {
+
     var queryStr = "INSERT INTO role (title, salary, department_id) VALUES ?";
     var values = [[title, salary, department_id]];
 
-
        db.query(queryStr, [values], (err, result) => {
         if (err) {
-            console.log("Query go Boom");
-          
+            console.log("Query go Boom");          
         }
         console.log(`${title} Added to Roles Succesfully!`);
-        newAction();             
-
+        newAction();      
       })  
 };
 
@@ -280,10 +278,8 @@ var questionAddRole = [
         validate: async (input) => {
             if ( (Number(input)) || input === '') {
                 return 'You need to provide a name';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
     {
@@ -293,10 +289,8 @@ var questionAddRole = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
     {
@@ -306,10 +300,8 @@ var questionAddRole = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
 ]
@@ -319,10 +311,14 @@ var questionAddRole = [
 //Adds new employee  -- NEED MANAGER AND ROLE INFO IN INITIAL POP UP
 function addEmployee () {
 
-    db.query(`SELECT department.id AS department_id, department.name AS department, role.title AS title, role.id AS role_id
-              FROM role
-              INNER JOIN department
-              ON role.department_id = department.id;`, 
+    db.query(`SELECT department.name AS department, role.title AS title, role.id AS role_id, manager.id AS manager_id, manager.first_name AS Manager_First_Name, manager.last_name AS Manager_Last_Name
+    FROM employee
+    RIGHT JOIN manager
+    ON employee.manager_id = manager.id
+    INNER JOIN role
+    ON  employee.role_id = role.id
+    INNER JOIN department
+    ON role.department_id = department.id;`, 
               (err, result) => {
         if (err) {
           console.log(err);
@@ -345,9 +341,9 @@ function addEmployeeDefine (questionAddEmployee) {
 }
 
 function addEmployeeActual (first_name, last_name, role_id, manager_id) {
+
     var queryStr = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ?";
     var values = [[first_name, last_name, role_id, manager_id]];
-
 
        db.query(queryStr, [values], (err, result) => {
         if (err) {
@@ -355,8 +351,7 @@ function addEmployeeActual (first_name, last_name, role_id, manager_id) {
           
         }
         console.log(`${first_name} ${last_name} Added to Employees Succesfully!`);
-        newAction();             
-
+        newAction(); 
       })  
 };
 
@@ -368,10 +363,8 @@ var questionAddEmployee = [
         validate: async (input) => {
             if ( (Number(input)) || input === '') {
                 return 'You need to provide a name';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
     {
@@ -381,10 +374,8 @@ var questionAddEmployee = [
         validate: async (input) => {
             if ( (Number(input)) || input === '') {
                 return 'You need to provide a name';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
     {
@@ -394,10 +385,8 @@ var questionAddEmployee = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
     {
@@ -407,10 +396,8 @@ var questionAddEmployee = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
 ]
@@ -418,17 +405,149 @@ var questionAddEmployee = [
 
 ///CASE 7 START
 //Update employees role
+function updateRole() {
+
+    db.query(`SELECT employee.first_name AS First_Name, employee.last_name AS Last_name, employee.id AS Employee_ID, employee.role_id AS Role_ID, role.title AS Role
+    FROM employee
+    INNER JOIN role
+    ON employee.role_id = role.id;`,
+         (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        const table = cTable.getTable(result);
+        console.log(table);
+        inquirer.prompt(questionUpdateRoleID)
+        .then(updateRoleDefine);     
+      })   
+};  
+
+function updateRoleDefine (questionUpdateRoleID) {
+
+    let newRoleID = questionUpdateRoleID.newRoleID;
+    let empID = questionUpdateRoleID.empID;
+    updateRoleActual (newRoleID, empID);
+}
+
+function updateRoleActual(newRoleID, empID) {
+    
+    var queryStr = `UPDATE employee
+                    SET employee.role_id = ?
+                    WHERE employee.id = ?`;
+    var values = [newRoleID, empID];
+
+       db.query(queryStr, values, (err, result) => {    
+        if (err) {
+          console.log(err);
+        }
+        console.log(`Updated Role to ${newRoleID} for employee ${empID}`);
+        newAction();
+      }) 
+      
+};  
+
+var questionUpdateRoleID = [
+    {
+        type: 'input',
+        name: 'empID',
+        message: 'What is the Employees id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+    {
+        type: 'input',
+        name: 'newRoleID',
+        message: 'What is the New Role id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+]
 ///CASE 7 END
 
 ///CASE 8 START
 //Update employees manager
+function updateMan() {
+
+    db.query(`SELECT employee.first_name AS First_Name, employee.last_name AS Last_name, employee.id AS Employee_ID, employee.manager_id AS Manager_ID, manager.first_name AS Manager_First_Name, manager.last_name AS Manager_Last_Name
+    FROM employee
+    INNER JOIN manager
+    ON employee.manager_id = manager.id;`,
+         (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        const table = cTable.getTable(result);
+        console.log(table);
+        inquirer.prompt(questionUpdateManID)
+        .then(updateManDefine);     
+      })   
+};  
+
+function updateManDefine (questionUpdateManID) {
+
+    let newManID = questionUpdateManID.newManID;
+    let empID = questionUpdateManID.empID;
+    updateManActual (newManID, empID);
+}
+
+function updateManActual(newManID, empID) {
+    
+    var queryStr = `UPDATE employee 
+                    SET employee.manager_id =? 
+                    WHERE employee.id =?`;
+    var values = [newManID, empID];
+
+       db.query(queryStr, values, (err, result) => {    
+        if (err) {
+          console.log(err);
+        }
+        console.log(`Updated Manager to ${newManID} for employee ${empID}`);
+        newAction();
+      }) 
+      
+};  
+
+var questionUpdateManID = [
+    {
+        type: 'input',
+        name: 'empID',
+        message: 'What is the Employees id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+    {
+        type: 'input',
+        name: 'newManID',
+        message: 'What is the New Managers id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+]
 ///CASE 8 END
 
 ///CASE 9 START
 //Shows manager names + IDs then asks for ID number
 function viewEmpMan () {
 
-    db.query(`SELECT * FROM manager`, (err, result) => {
+    db.query(`SELECT manager.first_name AS First_Name, manager.last_name AS Last_Name, manager.id AS Manager_ID
+              FROM manager`, 
+        (err, result) => {
         if (err) {
           console.log(err);
         }
@@ -436,8 +555,7 @@ function viewEmpMan () {
         console.log(table);  
         inquirer.prompt(questionManID)
         .then(empByMan);     
-      })  
-      
+      })       
 };
 
 //Assigns the ID then runs the second function Async
@@ -445,12 +563,19 @@ function empByMan (questionManID) {
 
     let manID = questionManID.id;
     viewEmpByMan (manID);
-
 }
 
 //Returns the table
 function viewEmpByMan (manID) {
-    db.query(`SELECT * FROM employee WHERE employee.manager_id = ?`, manID, (err, result) => {
+
+    db.query(`SELECT employee.first_name AS First_Name, employee.last_name AS Last_name, employee.id AS Employee_ID, role.title AS Role_Title, department.name AS Department, role.salary AS Salary, employee.manager_id AS Manager_ID
+    FROM employee
+    INNER JOIN role
+    ON employee.role_id = role.id
+    INNER JOIN department
+    ON role.department_id = department.id
+    WHERE employee.manager_id = ?;`,
+        manID, (err, result) => {
         if (err) {
           console.log(err);
         }
@@ -469,10 +594,8 @@ var questionManID = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
 ]
@@ -482,7 +605,7 @@ var questionManID = [
 //Function for viewing employees by department
 function viewEmpDept () {
 
-    db.query(`SELECT * FROM department`, (err, result) => {
+    db.query(`SELECT name AS Name, id AS ID FROM department`, (err, result) => {
         if (err) {
           console.log(err);
         }
@@ -490,21 +613,20 @@ function viewEmpDept () {
         console.log(table);  
         inquirer.prompt(questionDeptID)
         .then(empByDept);     
-      })  
-      
+      })       
 };
 
 //Assigns the ID then runs the second function Async
 function empByDept (questionDeptID) {
 
-    let manID = questionDeptID.id;
-    viewEmpByMan (manID);
-
+    let DeptID = questionDeptID.id;
+    viewEmpByDept (DeptID);
 }
 
 //Returns the table
-function viewEmpByMan (manID) {
-    db.query(`SELECT employee.first_name AS first_name, employee.last_name AS last_name, employee.id AS employee_id, role.title AS title, department.name AS department, role.salary AS salary
+function viewEmpByDept (manID) {
+
+    db.query(`SELECT employee.first_name AS First_Name, employee.last_name AS Last_Name, employee.id AS Employee_ID, role.title AS Role_Title, department.name AS Department, role.salary AS Salary
               FROM employee
               INNER JOIN role
               ON employee.role_id = role.id
@@ -528,10 +650,8 @@ var questionDeptID = [
         validate: async (input) => {
             if ( !(Number(input)) || input === '') {
                return 'That is not a number, the ID should be a number';
-            }
-      
-            return true;
-         
+            }      
+            return true;         
          }
     },
 ]
@@ -539,21 +659,165 @@ var questionDeptID = [
 
 ///CASE 11 START
 //Delete department
+function deleteDept () {
+
+    db.query(`SELECT department.name AS Department_Name, department.id AS Department_ID FROM department`, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        const table = cTable.getTable(result);
+        console.log(table);  
+        inquirer.prompt(questionDeleteDept)
+        .then(deleteDeptDefine);     
+      })       
+};
+
+//Assigns the ID then runs the second function Async
+function deleteDeptDefine (questionDeleteDept) {
+
+    let deptID = questionDeleteDept.id;
+    deleteDeptActual (deptID);
+}
+
+//Returns the table
+function deleteDeptActual (deptID) {
+
+    db.query(`DELETE FROM department 
+              WHERE department.id = ?;`, 
+              deptID, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(`${deptID} Removed from Departments`);
+        newAction();
+      })   
+};  
+
+var questionDeleteDept = [
+    {
+        type: 'input',
+        name: 'id',
+        message: 'What is the Departments id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+]
 ///CASE 11 END
 
 ///CASE 12 START
 //Delete role
+function deleteRole () {
+
+    db.query(`SELECT role.title AS Role_Title, department.name AS Department, role.id AS Role_ID
+    FROM role
+    INNER JOIN department
+    ON role.department_id = department.id;`, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        const table = cTable.getTable(result);
+        console.log(table);  
+        inquirer.prompt(questionDeleteRole)
+        .then(deleteRoleDefine);     
+      })       
+};
+
+//Assigns the ID then runs the second function Async
+function deleteRoleDefine (questionDeleteRole) {
+
+    let roleID = questionDeleteRole.id;
+    deleteRoleActual (roleID);
+}
+
+//Returns the table
+function deleteRoleActual (roleID) {
+
+    db.query(`DELETE FROM role 
+              WHERE role.id = ?;`, 
+              roleID, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(`${roleID} Removed from Roles`);
+        newAction();
+      })   
+};  
+
+var questionDeleteRole = [
+    {
+        type: 'input',
+        name: 'id',
+        message: 'What is the Roles id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+]
 ///CASE 12 END
 
 ///CASE 13 START
 //Delete employee
+function deleteEmployee () {
+
+    db.query(`SELECT employee.first_name AS Employee_First_Name, employee.last_name AS Employee_Last_Name, employee.id AS Employee_ID FROM employee`, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        const table = cTable.getTable(result);
+        console.log(table);  
+        inquirer.prompt(questionDeleteEmployee)
+        .then(deleteEmployeeDefine);     
+      })       
+};
+
+//Assigns the ID then runs the second function Async
+function deleteEmployeeDefine (questionDeleteEmployee) {
+
+    let employeeID = questionDeleteEmployee.id;
+    deleteEmployeeActual (employeeID);
+}
+
+//Returns the table
+function deleteEmployeeActual (empID) {
+
+    db.query(`DELETE FROM employee 
+              WHERE employee.id = ?;`, 
+              empID, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(`${empID} Removed from Employees`);
+        newAction();
+      })   
+};  
+
+var questionDeleteEmployee = [
+    {
+        type: 'input',
+        name: 'id',
+        message: 'What is the Employee id?',
+        validate: async (input) => {
+            if ( !(Number(input)) || input === '') {
+               return 'That is not a number, the ID should be a number';
+            }      
+            return true;         
+         }
+    },
+]
 ///CASE 13 END
 
 ///CASE 14 START
 //Shows budget of each department
 function viewBudget () {
 
-    db.query(`SELECT department.name, 
+    db.query(`SELECT department.name AS Department_Name, 
               SUM(salary) AS Department_Total_Salary
               FROM department
               INNER JOIN role
