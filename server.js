@@ -1,15 +1,16 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+require('dotenv').config();
 
 const db = mysql.createConnection(
     {
-      host: 'localhost',
+      host: process.env.SQL_HOST,
       // MySQL username,
-      user: 'root',
+      user: process.env.SQL_USER,
       // MySQL password
-      password: '', //ADD THIS IN//
-      database: 'employee_db'
+      password: process.env.SQL_PASSWORD, 
+      database: process.env.SQL_DATABSE
     },
     console.log(`Connected to the Employees database.`)
   );
@@ -108,8 +109,7 @@ function switchFunction (questionsAction) {
             break;
 
         case "Finished!":
-            process.exit();
-            break;
+            process.exit();// Exits the App            
 }
 }
 
@@ -158,7 +158,7 @@ function viewEmployee () {
         db.query(
                   `SELECT employee.first_name AS First_Name, employee.last_name AS Last_Name, employee.id AS Employee_ID, role.title AS Role_Title, role.salary AS Salary, department.name AS Department, manager.first_name AS Manager_First_Name,  manager.last_name AS Manager_Last_Name
                   FROM employee
-                  RIGHT JOIN manager
+                  INNER JOIN manager
                   ON employee.manager_id = manager.id
                   INNER JOIN role
                   ON  employee.role_id = role.id
@@ -180,10 +180,7 @@ function viewEmployee () {
 function addDept () {
 
     db.query(
-        `SELECT department.name AS Department_Name, department.id AS Department_ID
-         FROM role
-         INNER JOIN department
-         ON role.department_id = department.id;`, 
+        `SELECT department.name AS Department_Name, department.id AS Department_ID FROM department;`, 
          (err, result) => {
         if (err) {
           console.log(err);
@@ -308,7 +305,7 @@ var questionAddRole = [
 ///CASE 5 END
 
 ///CASE 6 START
-//Adds new employee  -- NEED MANAGER AND ROLE INFO IN INITIAL POP UP
+//Adds new employee  
 function addEmployee () {
 
     db.query(`SELECT department.name AS department, role.title AS title, role.id AS role_id, manager.id AS manager_id, manager.first_name AS Manager_First_Name, manager.last_name AS Manager_Last_Name
@@ -819,9 +816,11 @@ function viewBudget () {
 
     db.query(`SELECT department.name AS Department_Name, 
               SUM(salary) AS Department_Total_Salary
-              FROM department
+              FROM employee
               INNER JOIN role
-              ON department.id = role.department_id
+              ON employee.role_id = role.id
+              INNER JOIN department
+              ON role.department_id = department.id
               GROUP BY name;`,
               (err, result) => {
         if (err) {

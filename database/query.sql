@@ -1,3 +1,5 @@
+ /* DO NOT RUN, QUERIES ARE FRAMEWORKS FOR SERVER.JS */
+ 
  /*View ALL DEPARTMENTS*/
 SELECT * FROM department;
 
@@ -23,7 +25,7 @@ INSERT INTO department (name)
 
 /*Add to Role*/
 INSERT INTO role (title, salary, department_id)
-  VALUES ("builder", 45000, 3);
+  VALUES (?,?,?);
 
 /*Add to Employee*/
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
