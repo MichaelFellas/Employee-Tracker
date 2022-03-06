@@ -9,8 +9,8 @@
 | [3. Acceptance Criteria.](#acceptance-criteria) |
 | [4. Installation.](#installation) |
 | [5. Usage.](#usage)|
-| [6. License.](#licenses)|
-| [7. Contributing.](#contributing)|6
+| [6. License.](#license)|
+| [7. Contributing.](#contributing)|
 | [8. Technologies Used.](#technologies-used)|
 | [9. Screenshot.](#screenshot)|
 | [10. Video Demo.](#video-demo)|
